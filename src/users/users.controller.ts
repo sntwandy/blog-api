@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put, UnprocessableEntityException } from '@nestjs/common';
 
 interface User {
   id: string;
@@ -39,7 +39,7 @@ export class UsersController {
     // We need to validate the email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(body.email)) {
-      return { error: 'Invalid email format' };
+      throw new UnprocessableEntityException('Invalid email format');
     }
     // Check if the user already exists
     const existingUser = this.users.find((user) => user.email === body.email);
@@ -68,7 +68,7 @@ export class UsersController {
     }
     const userIndex = this.users.findIndex((user) => user.id === id);
     if (userIndex === -1) {
-      return { error: 'User not found' };
+      throw new NotFoundException(`User with id ${id} found`);
     }
     const updatedUser = { ...this.users[userIndex], ...body };
     this.users[userIndex] = updatedUser;
@@ -84,7 +84,7 @@ export class UsersController {
     const userIndex = this.users.findIndex((user) => user.id === id);
 
     if (userIndex === -1) {
-      return { error: 'User not found' };
+      throw new NotFoundException(`User with id ${id} found`);
     }
 
     this.users.splice(userIndex, 1);
