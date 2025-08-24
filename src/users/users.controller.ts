@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 
 interface User {
   id: string;
@@ -35,16 +35,46 @@ export class UsersController {
   }
 
   @Post()
-  createUser(@Body() user: Omit<User, 'id'>) {
+  createUser(@Body() body: Omit<User, 'id'>) {
+    // We need to validate the email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(body.email)) {
+      return { error: 'Invalid email format' };
+    }
+    // Check if the user already exists
+    const existingUser = this.users.find((user) => user.email === body.email);
+    if (existingUser) {
+      return { error: 'User with this email already exists' };
+    }
+    // Create a new user with a unique ID
     const newUser: User = {
+      ...body,
       id: (this.users.length + 1).toString(),
-      name: user.name,
-      email: user.email,
     };
     this.users.push(newUser);
     return {
       message: 'User created successfully',
       data: newUser,
+      error: null,
+    };
+  }
+
+  @Put(':id')
+  updateUser(@Param('id') id: string, @Body() body: Partial<Omit<User, 'id'>>) {
+    // if the field email is comming we need to validate it
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (body.email && !emailRegex.test(body.email)) {
+      return { error: 'Invalid email format' };
+    }
+    const userIndex = this.users.findIndex((user) => user.id === id);
+    if (userIndex === -1) {
+      return { error: 'User not found' };
+    }
+    const updatedUser = { ...this.users[userIndex], ...body };
+    this.users[userIndex] = updatedUser;
+    return {
+      message: 'User updated successfully',
+      data: updatedUser,
       error: null,
     };
   }
