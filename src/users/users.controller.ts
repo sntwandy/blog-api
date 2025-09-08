@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put, UnprocessableEntityException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from '@nestjs/common';
+import { CreateUserDTO, UpdateUserDTO } from './user.dto';
 
 interface User {
   id: string;
@@ -35,12 +36,7 @@ export class UsersController {
   }
 
   @Post()
-  createUser(@Body() body: Omit<User, 'id'>) {
-    // We need to validate the email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
-      throw new UnprocessableEntityException('Invalid email format');
-    }
+  createUser(@Body() body: CreateUserDTO) {
     // Check if the user already exists
     const existingUser = this.users.find((user) => user.email === body.email);
     if (existingUser) {
@@ -60,12 +56,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  updateUser(@Param('id') id: string, @Body() body: Partial<Omit<User, 'id'>>) {
-    // if the field email is comming we need to validate it
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (body.email && !emailRegex.test(body.email)) {
-      return { error: 'Invalid email format' };
-    }
+  updateUser(@Param('id') id: string, @Body() body: UpdateUserDTO) {
     const userIndex = this.users.findIndex((user) => user.id === id);
     if (userIndex === -1) {
       throw new NotFoundException(`User with id ${id} found`);
